@@ -31,11 +31,11 @@ app.get('/joyas', async (req, res) => {
         let orderByClause = '';
         if(order_by){
             const [column,direction] = order_by.split("_");
-            orderByClause = `ORDER BY ${column} ${direction}`;
+            orderByClause = `ORDER BY ${column} ${direction.toUpperCase()}`;
         }
 
         const limit= parseInt(limits) || 10;
-        const offset = parseInt(pages) * limit || 0;
+        const offset = (parseInt(pages)-1) * limit || 0;
 
         const client = await pool.connect();
         const result = await client.query(`SELECT * FROM inventario ${orderByClause} LIMIT $1 OFFSET $2`,[limit,offset]);
@@ -43,7 +43,7 @@ app.get('/joyas', async (req, res) => {
         const stockResult = await client.query(`SELECT SUM(stock) AS TOTAL FROM inventario`);
         const stockTotal = stockResult.rows[0].total;
 
-        const res= {totaljoyas: result.rowsCount,
+        const respuesta= {totaljoyas: result.rowsCount,
                     stockTotal,
                     results: result.rows.map(joya => ({
                         id: joya.id,
@@ -51,7 +51,7 @@ app.get('/joyas', async (req, res) => {
                         precio: joya.precio,
 
                     }))}
-        res.json(res);
+        res.json(respuesta);
         client.release();
 
 
@@ -63,6 +63,46 @@ app.get('/joyas', async (req, res) => {
 
 });
 
+
+app.get('/joyas/filter', async (req, res) => {
+    try{
+        const {precio_max, precio_min,categoria,metal} = req.query;
+        let query = 'SELECT * FROM inventario 1=1';
+        const values = [];
+
+        if(precio_max){
+            query += ` AND precio <= ${index}`;
+            values.push(precio_max);
+            index++;
+        }
+        if(precio_min){
+            query += ` AND precio >= ${index}`;
+            values.push(precio_min);
+            index++;
+        }
+        if(categoria){
+            query += ` AND categoria = ${index}`;
+            values.push(categoria);
+            index++;
+        }
+        if(metal){
+            query += ` AND metal = ${index}`;
+            values.push(metal);
+            index++;
+        }
+        const client = await pool.connect();
+        const result = await client.query(query,values);
+        res.json(result.rows);
+        client.release();
+
+
+    }catch (error){
+        console.log(error);
+        res.status(500).json('Internal Server Error');
+
+    }
+
+});
 
 
 
