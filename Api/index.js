@@ -68,29 +68,30 @@ app.get('/joyas', async (req, res) => {
 });
 
 
-app.get('/joyas/filter', async (req, res) => {
+app.get('/joyas/filtros', async (req, res) => {
     try {
         const { precio_max, precio_min, categoria, metal } = req.query;
-        let query = 'SELECT * FROM inventario 1=1';
+        let query = 'SELECT * FROM inventario where 1=1';
         const values = [];
+        let index = 1;
 
         if (precio_max) {
-            query += ` AND precio <= ${index}`;
+            query += ` AND precio <= $${index}`;
             values.push(precio_max);
             index++;
         }
         if (precio_min) {
-            query += ` AND precio >= ${index}`;
+            query += ` AND precio >= $${index}`;
             values.push(precio_min);
             index++;
         }
         if (categoria) {
-            query += ` AND categoria = ${index}`;
+            query += ` AND categoria = $${index}`;
             values.push(categoria);
             index++;
         }
         if (metal) {
-            query += ` AND metal = ${index}`;
+            query += ` AND metal = $${index}`;
             values.push(metal);
             index++;
         }
